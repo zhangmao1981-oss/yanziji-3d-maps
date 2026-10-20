@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>融创玉兰公馆 3D 地图（NVDA 渲染端）</title>
+<style>
+html,body{margin:0;height:100%;font-family:"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif;background:#0e1420}
+#map{position:absolute;inset:0}
+.pill{padding:3px 10px;border-radius:999px;color:#fff;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.45);transform:translate(-50%,-50%)}
+.pill.hero{background:#123478;font-size:17px;padding:6px 16px}
+.pill.comp{background:#6c42a8}.pill.fac{background:#166e3c}.pill.bld{background:#c62828;font-size:12px;padding:2px 8px}
+.pill.sta{background:#005eb8}.pill.shop{background:#e07b00;font-size:12px}
+.road{color:#ffe96a;font-size:15px;font-weight:700;text-shadow:0 1px 3px #000,0 0 6px rgba(0,0,0,.8);white-space:nowrap;transform:translate(-50%,-50%);text-align:center}
+.road small{display:block;color:#fff;font-size:11px;font-weight:400}
+#panel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,12,20,.82);z-index:50}
+#panel .box{background:#fff;border-radius:14px;padding:26px 30px;width:min(480px,92vw);color:#222;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#panel h2{margin:0 0 6px;font-size:20px}#panel p{margin:4px 0 14px;color:#555;font-size:14px;line-height:1.6}
+#panel label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}
+#panel input{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #bbb;border-radius:8px;font-size:15px}
+#panel button{margin-top:18px;width:100%;padding:12px;border:0;border-radius:8px;background:#005eb8;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+#bar{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:40;background:rgba(10,16,28,.88);color:#fff;padding:8px 14px;border-radius:10px;font-size:14px;display:none;align-items:center;gap:10px}
+#bar button{background:#26314a;color:#fff;border:1px solid #4a5a7d;border-radius:6px;padding:4px 10px;cursor:pointer}
+</style></head><body>
+<div id="map"></div>
+<div id="bar"><span id="barmsg"></span><button id="rekey">重新填写 Key</button></div>
+<div id="panel"><div class="box">
+<h2>填写高德 JS API 凭据</h2>
+<p>把「3D地图」应用的 Key 和安全密钥粘贴到下面，点保存。本页只把它们存在这台浏览器的本地（localStorage），不上传任何服务器。</p>
+<label>Key</label><input id="k" autocomplete="off" spellcheck="false">
+<label>安全密钥（securityJsCode）</label><input id="s" autocomplete="off" spellcheck="false">
+<button id="save">保存并加载地图</button>
+</div></div>
+<script>
+const DATA = {"compounds": [{"n": "佳兆业燕然居", "p": [118.824457, 32.141106]}, {"n": "保利·国际社区二期", "p": [118.826602, 32.141573]}, {"n": "保利·国际社区一期", "p": [118.827026, 32.13987]}, {"n": "兰庭花境苑", "p": [118.824997, 32.139288]}, {"n": "瑾家阅江台", "p": [118.823681, 32.138893]}, {"n": "仁恒公园世纪", "p": [118.823743, 32.143257]}, {"n": "宝能·滨江府B区", "p": [118.826096, 32.143676]}, {"n": "招商依云和府", "p": [118.829861, 32.138638]}, {"n": "弘阳燕江府", "p": [118.827654, 32.138121]}, {"n": "紫御东方二期", "p": [118.831817, 32.138849]}, {"n": "紫御东方一期", "p": [118.832728, 32.137753]}, {"n": "华侨城燕熙台A区", "p": [118.834567, 32.138814]}, {"n": "华侨城燕熙台B区", "p": [118.836427, 32.139465]}, {"n": "华发四季雅筑", "p": [118.836991, 32.13834]}, {"n": "栖熙里", "p": [118.834472, 32.137686]}, {"n": "中海·燕矶听潮A区", "p": [118.833431, 32.13629]}, {"n": "颐和四季府", "p": [118.836391, 32.136973]}, {"n": "燕澜湾西区", "p": [118.824753, 32.133315]}, {"n": "燕澜湾东区", "p": [118.826973, 32.132459]}, {"n": "三金·燕语庭", "p": [118.824404, 32.131843]}, {"n": "祥和雅苑北区", "p": [118.826671, 32.131166]}, {"n": "胜利二村", "p": [118.821176, 32.134059]}, {"n": "胜利三村", "p": [118.820703, 32.132919]}, {"n": "燕子矶新城", "p": [118.83376, 32.13744]}, {"n": "南京宝能金融中心", "p": [118.829149, 32.140315]}, {"n": "金科博翠花园", "p": [118.825412, 32.137354]}, {"n": "太新路3号小区", "p": [118.823475, 32.137275]}, {"n": "中海·燕矶听潮C区", "p": [118.831965, 32.134361]}, {"n": "华侨城燕熙台西区", "p": [118.833475, 32.139275]}], "facilities": [{"n": "南师附中燕子矶新城学校（初中部）", "p": [118.831145, 32.135639]}, {"n": "南师附中新校区（在建）", "p": [118.822025, 32.142825]}, {"n": "南师附中幼儿园北园", "p": [118.824486, 32.134618]}, {"n": "燕子矶派出所", "p": [118.824309, 32.130628]}, {"n": "南师附中幼儿园南园", "p": [118.83059, 32.133364]}, {"n": "观音门公园", "p": [118.820466, 32.142919]}], "roads": [{"n": "太新路", "p": [118.828, 32.1393]}, {"n": "和燕路", "p": [118.8218, 32.1385]}, {"n": "燕城大道", "p": [118.8352, 32.136]}, {"n": "徐家村街", "p": [118.8293, 32.13606]}, {"n": "嘉善路", "p": [118.82955, 32.1399]}, {"n": "燕园路", "p": [118.8268, 32.1403]}, {"n": "燕春路", "p": [118.8258, 32.1355]}, {"n": "达古路", "p": [118.833, 32.1348]}], "shops": [{"n": "乐刻运动健身", "p": [118.829098, 32.137221]}, {"n": "一鸣真鲜奶吧", "p": [118.82865, 32.137477]}, {"n": "优佳鲜果园", "p": [118.829562, 32.137452]}, {"n": "菜鸟驿站", "p": [118.82968, 32.137175]}], "buildings": [{"n": "一期5幢", "p": [118.82757, 32.13718]}, {"n": "一期6幢", "p": [118.82821, 32.13725]}, {"n": "一期7幢", "p": [118.82853, 32.13685]}, {"n": "一期4幢", "p": [118.82899, 32.13676]}, {"n": "一期3幢", "p": [118.8276, 32.13679]}, {"n": "一期1幢", "p": [118.82794, 32.13638]}, {"n": "一期2幢", "p": [118.82929, 32.13643]}, {"n": "二期4幢", "p": [118.83111, 32.13745]}, {"n": "二期3幢", "p": [118.83044, 32.13709]}, {"n": "二期2幢", "p": [118.83148, 32.13697]}, {"n": "二期1幢", "p": [118.83036, 32.13672]}], "hero": [{"n": "融创玉兰公馆一期", "p": [118.82832, 32.136706]}, {"n": "融创玉兰公馆二期", "p": [118.830587, 32.13722]}], "stations": [{"n": "笆斗山站 · 1号线", "p": [118.829597, 32.143424]}, {"n": "燕子矶站 · 1号线", "p": [118.821914, 32.136112]}], "metroMain": [[118.829597, 32.143424], [118.821914, 32.136112]], "metroExtA": [[118.842255, 32.145568], [118.829597, 32.143424]], "metroExtB": [[118.821914, 32.136112], [118.821339, 32.126634]]};
+const $=id=>document.getElementById(id);
+function creds(){try{return JSON.parse(localStorage.getItem('amap_js')||'null')}catch(e){return null}}
+function showPanel(prefill){$('panel').style.display='flex';if(prefill){const c=creds();if(c){$('k').value=c.k;$('s').value=c.s}}}
+$('rekey').onclick=()=>showPanel(true);
+$('save').onclick=()=>{const k=$('k').value.trim(),s=$('s').value.trim();if(!k||!s){alert('Key 和安全密钥都要填');return}localStorage.setItem('amap_js',JSON.stringify({k,s}));location.reload()};
+const c=creds();
+if(!c){showPanel(false)}
+else{
+  window._AMapSecurityConfig={securityJsCode:c.s};
+  const sc=document.createElement('script');sc.src='https://webapi.amap.com/maps?v=2.0&key='+encodeURIComponent(c.k)+'&plugin=AMap.Scale,AMap.ToolBar';
+  sc.onload=init;sc.onerror=()=>{$('bar').style.display='flex';$('barmsg').textContent='高德 SDK 加载失败（网络或 Key 问题）'};
+  document.head.appendChild(sc);
+}
+function mk(map,content,pos,z){return new AMap.Marker({position:pos,content:content,anchor:'center',zIndex:z||100,map:map})}
+function pill(cls,text){return '<div class="pill '+cls+'">'+text+'</div>'}
+function init(){
+  const map=new AMap.Map('map',{viewMode:'3D',pitch:55,rotation:-15,zoom:16.5,center:[118.8294,32.1370],features:['bg','road','building','point']});
+  map.addControl(new AMap.Scale());map.addControl(new AMap.ToolBar({position:{right:'12px',top:'80px'}}));
+  DATA.hero.forEach(d=>mk(map,pill('hero',d.n),d.p));
+  DATA.compounds.forEach(d=>mk(map,pill('comp',d.n),d.p,90));
+  DATA.facilities.forEach(d=>mk(map,pill('fac',d.n),d.p,90));
+  DATA.buildings.forEach(d=>mk(map,pill('bld',d.n),d.p,110));
+  DATA.shops.forEach(d=>mk(map,pill('shop',d.n),d.p,95));
+  DATA.roads.forEach(d=>mk(map,'<div class="road">'+d.n+'<small>'+d.p[0].toFixed(4)+', '+d.p[1].toFixed(4)+'</small></div>',d.p,80));
+  const line=(path,dashed)=>new AMap.Polyline({path:path,strokeColor:'#005eb8',strokeWeight:dashed?5:7,strokeOpacity:dashed?0.55:0.95,strokeStyle:dashed?'dashed':'solid',strokeDasharray:dashed?[14,12]:undefined,map:map,zIndex:60});
+  line(DATA.metroMain,false);line(DATA.metroExtA,true);line(DATA.metroExtB,true);
+  DATA.stations.forEach(d=>mk(map,pill('sta','M '+d.n),d.p,120));
+  window.__map=map;
+}
+</script></body></html>
